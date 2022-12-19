@@ -1,5 +1,5 @@
 #include "smoke.hpp"
-
+#include <chrono>
 #include <fstream>
 #include <memory>
 #include <NvInferPlugin.h>
@@ -88,7 +88,7 @@ void SMOKE::prepare(const cv::Mat& intrinsic)
     intrinsic_.at<float>(1, 2) *= static_cast<float>(INPUT_H) / IMAGE_H;
 }
 
-void SMOKE::Detect(const cv::Mat& raw_img) 
+void SMOKE::Detect(const cv::Mat& raw_img,string idx)
 {
     auto start =  std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
@@ -121,13 +121,13 @@ void SMOKE::Detect(const cv::Mat& raw_img)
     cudaStreamSynchronize(stream_);
     end = std::chrono::high_resolution_clock::now();
     int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - compute_start);
-    std::cout<<"compute(ms):"<<int_ms.count()<<",fps:"<<1000/int_ms.count()<<std::endl;
+    std::cout<<"executeV2(ms):"<<int_ms.count()<<",fps:"<<1000/int_ms.count()<<std::endl;
     // Decoding and visualization
-    PostProcess(img_resize);
+    PostProcess(img_resize,idx);
 
     end = std::chrono::high_resolution_clock::now();
     int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout<<"one frame(ms):"<<int_ms.count()<<",fps:"<<1000/int_ms.count()<<std::endl;
+    std::cout<<"end2end(ms):"<<int_ms.count()<<",fps:"<<1000/int_ms.count()<<std::endl;
 
 }
 
@@ -172,7 +172,7 @@ void SMOKE::LoadOnnx(const std::string& onnx_path)
     auto config = unique_ptr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
     
     // fp16精度的模型类别预测错误,会造成后处理崩溃.
-    // config->setFlag(nvinfer1::BuilderFlag::kFP16);
+    config->setFlag(nvinfer1::BuilderFlag::kFP16);
     size_t workspace_size = (1ULL << 30);
     #if (NV_TENSORRT_MAJOR * 1000) + (NV_TENSORRT_MINOR * 100) + NV_TENSOR_PATCH >= 8400
         config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, workspace_size);
@@ -211,13 +211,14 @@ float Sigmoid(float x) {
     return 1.0f / (1.0f + expf(-x));
 }
 
-void SMOKE::PostProcess(cv::Mat& input_img) 
+void SMOKE::PostProcess(cv::Mat& input_img,std::string idx)
 {
     for (int i = 0; i < TOPK; ++i) 
     {
         if (topk_scores_[i] < SCORE_THRESH) {
             continue;
         }
+        if (std::isinf(topk_indices_[i])) continue;
         // https://github.com/open-mmlab/mmdetection3d/blob/master/mmdet3d/core/bbox/coders/smoke_bbox_coder.py#L52
         int class_id = static_cast<int>(topk_indices_[i] / OUTPUT_H / OUTPUT_W);
         int location = static_cast<int>(topk_indices_[i]) % (OUTPUT_H * OUTPUT_W);
@@ -313,5 +314,7 @@ void SMOKE::PostProcess(cv::Mat& input_img)
         }
     }
 
-    // cv::imwrite("../result.png",input_img);
+    // cv::imwrite("../result/" + idx,input_img);
+    cv::imshow("res",input_img);
+    cv::waitKey(30);
 }

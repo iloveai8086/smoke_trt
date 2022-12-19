@@ -4,14 +4,14 @@
 #include "trt_modulated_deform_conv.hpp"
 #include "serialize.hpp"
 
-namespace 
+namespace
 {
 static const char *PLUGIN_VERSION{"1"};
 static const char *PLUGIN_NAME{"MMCVModulatedDeformConv2d"};
 // const char * NMS_PLUGIN_NAMESPACE{""};
 }  // namespace    
 
-namespace mmdeploy 
+namespace mmdeploy
 {
 ModulatedDeformableConvPluginDynamic::ModulatedDeformableConvPluginDynamic(
     const std::string &name, const nvinfer1::Dims stride, const nvinfer1::Dims padding,
@@ -21,7 +21,7 @@ ModulatedDeformableConvPluginDynamic::ModulatedDeformableConvPluginDynamic(
       mPadding(padding),
       mDilation(dilation),
       mDeformableGroup(deformableGroup),
-      mGroup(group) 
+      mGroup(group)
 {
   mWithBias = false;
 }
@@ -30,7 +30,7 @@ ModulatedDeformableConvPluginDynamic::ModulatedDeformableConvPluginDynamic(const
                                                                            const void *data,
                                                                            size_t length)
 {
-  mPluginName = name; 
+  mPluginName = name;
   deserialize_value(&data, &length, &mStride);
   deserialize_value(&data, &length, &mPadding);
   deserialize_value(&data, &length, &mDilation);
@@ -56,9 +56,9 @@ void ModulatedDeformableConvPluginDynamic::setPluginNamespace(const char * plugi
    mPluginNamespace = pluginNamespace;
 }
 
-const char * ModulatedDeformableConvPluginDynamic::getPluginNamespace() const noexcept 
-{ 
-    return mPluginNamespace.c_str(); 
+const char * ModulatedDeformableConvPluginDynamic::getPluginNamespace() const noexcept
+{
+    return mPluginNamespace.c_str();
 }
 
 int ModulatedDeformableConvPluginDynamic::initialize() noexcept
@@ -97,13 +97,13 @@ void ModulatedDeformableConvPluginDynamic::serialize(void *buffer) const noexcep
 }
 
 nvinfer1::DataType ModulatedDeformableConvPluginDynamic::getOutputDataType(
-    int index, const nvinfer1::DataType *inputTypes, int nbInputs) const noexcept 
+    int index, const nvinfer1::DataType *inputTypes, int nbInputs) const noexcept
 {
   return inputTypes[0];
 }
 
 nvinfer1::IPluginV2DynamicExt * ModulatedDeformableConvPluginDynamic::clone() const noexcept
-{    
+{
     ModulatedDeformableConvPluginDynamic* plugin = new ModulatedDeformableConvPluginDynamic(mPluginName,
       mStride,mPadding,mDilation,mDeformableGroup,mGroup);
 
@@ -118,7 +118,7 @@ nvinfer1::DimsExprs ModulatedDeformableConvPluginDynamic::getOutputDimensions(
     nvinfer1::IExprBuilder & exprBuilder) noexcept
 {
   //to be clear,input: x(b,c1,h,w) offset(c2,2,h,w) mask(c2,n,n) weight(c2,n,n)  output: y(b,c2,h,w)
-  
+
   nvinfer1::DimsExprs ret;
   ret.nbDims = 4;
   ret.d[0] = inputs[0].d[0];
@@ -134,7 +134,7 @@ bool ModulatedDeformableConvPluginDynamic::supportsFormatCombination(
     int pos, const nvinfer1::PluginTensorDesc * inOut, int nbInputs,
     int nbOutputs) noexcept
 {
-  //pos的可能取值为0-N N为该算子的输入输出总数目-1  
+  //pos的可能取值为0-N N为该算子的输入输出总数目-1
   if (pos == 0) {
     return (inOut[pos].type == nvinfer1::DataType::kFLOAT &&
             inOut[pos].format == nvinfer1::TensorFormat::kLINEAR);
@@ -261,10 +261,10 @@ void ModulatedDeformableConvPluginDynamicCreator::setPluginNamespace(const char 
   mNamespace = libNamespace;
 }
 
-const char * ModulatedDeformableConvPluginDynamicCreator::getPluginNamespace() const noexcept 
-{ 
+const char * ModulatedDeformableConvPluginDynamicCreator::getPluginNamespace() const noexcept
+{
   // std::cout<<"getPluginNamespace():"<<mNamespace<<std::endl;
-  return mNamespace.c_str(); 
+  return mNamespace.c_str();
 }
 
 const nvinfer1::PluginFieldCollection * ModulatedDeformableConvPluginDynamicCreator::getFieldNames() noexcept { return &mFC; }

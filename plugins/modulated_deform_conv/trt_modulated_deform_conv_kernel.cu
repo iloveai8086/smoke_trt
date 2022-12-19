@@ -326,6 +326,7 @@ void ModulatedDeformConvForwardCUDAKernelLauncher(
     int pad_h, int dilation_w, int dilation_h, int group, int deformable_group, int im2col_step,
     cublasHandle_t cublas_handle, cudaStream_t stream) 
 {
+    std::cout << "fp16 launcher!" << std::endl;
   bool with_bias = (bias != nullptr);
 
   im2col_step = std::min(int(batch), im2col_step);

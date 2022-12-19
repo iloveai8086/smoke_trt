@@ -49,12 +49,12 @@ class SMOKE {
           
     ~SMOKE();
 
-    void Detect(const cv::Mat& raw_img);
+    void Detect(const cv::Mat& raw_img,std::string idx);
     void LoadOnnx(const std::string& onnx_path);
     void LoadEngine(const std::string& engine_path);
     void prepare(const cv::Mat& intrinsic);
   private:
-    void PostProcess(cv::Mat& input_img);
+    void PostProcess(cv::Mat& input_img,std::string idx);
 
     Logger g_logger_;
     cudaStream_t stream_;
