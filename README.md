@@ -23,6 +23,10 @@ make
 单纯模型推理时间:compute:54ms,fps:18
 全流程时间:one frame:65ms,fps:15
 
+##TODO
+DCN的插件还存在FP16的问题，参考mmdeploy的最新实现，目前是FP16推理classID存在问题，部分classID正常  
+继续寻找解决问题的办法~
+
 ## Acknowledgement
 [TensorRT-SMOKE] (https://github.com/Yibin122/TensorRT-SMOKE)  
 [TensorRT-SMOKE] (https://github.com/storrrrrrrrm/tensorrt_smoke)  
